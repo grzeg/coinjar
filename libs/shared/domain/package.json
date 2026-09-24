@@ -20,5 +20,7 @@
       "type:domain"
     ]
   },
-  "dependencies": {}
+  "dependencies": {
+    "@coinjar/shared-util": "workspace:*"
+  }
 }
