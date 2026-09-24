@@ -232,7 +232,11 @@ importers:
 
   libs/budget/state: {}
 
-  libs/shared/domain: {}
+  libs/shared/domain:
+    dependencies:
+      '@coinjar/shared-util':
+        specifier: workspace:*
+        version: link:../util
 
   libs/shared/ui: {}
 
