@@ -1,0 +1,21 @@
+{
+  "name": "@coinjar/coinjar-web",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "name": "coinjar-web",
+    "tags": [
+      "scope:app",
+      "type:app"
+    ]
+  },
+  "dependencies": {
+    "@coinjar/budget-feature-categories": "workspace:*",
+    "@coinjar/budget-feature-daily-grid": "workspace:*",
+    "@coinjar/budget-feature-dashboard": "workspace:*",
+    "@coinjar/budget-feature-plan": "workspace:*",
+    "@coinjar/budget-feature-transactions": "workspace:*",
+    "@coinjar/budget-feature-yearly": "workspace:*",
+    "@coinjar/shared-util": "workspace:*"
+  }
+}

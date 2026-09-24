@@ -1,0 +1,13 @@
+# Add files here to ignore them from prettier formatting
+/dist
+/coverage
+/.nx/cache
+/.nx/workspace-data
+.nx/self-healing
+/pnpm-lock.yaml
+/.husky/_
+**/test-output
+**/playwright-report
+**/test-results
+# Hand-written project guide; keep its formatting as authored.
+/CLAUDE.md
