@@ -18,6 +18,8 @@ CoinJar replaces a household budget spreadsheet (Excel). It lets the user:
 **Primary goal: learning.** The project is used to practise the stack before a job interview.
 Readability, good practices and tests matter more than the number of features. See section 11 "Working with Claude".
 
+**Interview focus.** The target role expects a senior with deep Nx knowledge, modular monolith architecture, Nx generators and agile work with AI tools. Every milestone should make these visible; see section 16.
+
 ## 2. Stack (mandatory — do not swap anything without asking)
 
 | Area | Tool |
@@ -284,7 +286,7 @@ This is a learning project, so:
 - Communicate with the user in Polish unless they write in English. This file, code and commits stay in English.
 - For every non-trivial decision (structure, library API choice, pattern), **briefly explain "why"** and name an alternative. These questions come up in interviews.
 - When the user writes "**practice mode**" (or "**tryb ćwiczeń**"): do not write the finished solution. Prepare a skeleton (types, signatures, tests that must pass) and wait for the user to implement the rest; then do a code review.
-- After finishing a milestone, suggest 3–5 interview questions related to what was built.
+- After finishing a milestone, suggest 3–5 interview questions related to what was built. Always include at least one on Nx, modular monolith architecture, generators or AI-assisted work (section 16).
 - Work in small steps, one milestone at a time. Do not jump ahead of the plan without approval.
 - **Do not start any Supabase work** (section 14) until the user explicitly says the interview preparation stage is finished. Until then, do not install `@supabase/supabase-js`, do not create the `supabase/` folder or login screens. You may and should follow the rules in section 14.1, since they cost little and make the later migration easier.
 
@@ -292,19 +294,20 @@ This is a learning project, so:
 
 1. **Foundation**: Nx workspace (pnpm, Vite, React, React Compiler), ESLint flat config, Prettier, Husky, lint-staged, Commitizen, commitlint, tags and module boundaries, empty layout with routing. First push to the GitHub repo, basic CI workflow (lint, test, build) and the Vercel project connected, so the app is deployed from day one (section 15).
 2. **Domain and util**: Zod schemas, `money`, dates, summary calculations with tests (fixture from section 6).
-3. **Design system**: theme (light/dark), atoms and molecules in Storybook with `play` functions and a11y.
-4. **Data access**: MSW with persistence and delay, API client, query keys, Query hooks, seed data.
-5. **Categories**: tree, CRUD, archiving, ordering.
-6. **Transactions**: list with filters (filters in Zustand), RHF + Zod + MUI form, optimistic updates.
-7. **Plan and dashboard**: plan editing, copy from previous month, KPIs and realisation bars.
-8. **Daily grid**: categories × days table with totals, cell details.
-9. **Yearly summary**: 12-month table (optionally a chart).
-10. **E2E and quality**: Playwright scenarios, the E2E job in CI, required status checks on `main`, optionally E2E smoke tests against Vercel preview deployments (section 15).
-11. **Monitoring**: CloudWatch RUM (configured from env, enabled in production only), an Error Boundary that reports errors, a custom "transaction_created" event, with no personal data or amounts in events.
+3. **Nx plugin and generators** (section 16): local plugin `tools/coinjar-plugin`, generators `library`, `ui-component` and `feature-view` with tests, `bannedExternalImports` in module boundaries, ADR 0001 "Modular monolith", a Claude Code command that drives the generators.
+4. **Design system**: theme (light/dark), atoms and molecules in Storybook with `play` functions and a11y (components created with the `ui-component` generator).
+5. **Data access**: MSW with persistence and delay, API client, query keys, Query hooks, seed data.
+6. **Categories**: tree, CRUD, archiving, ordering.
+7. **Transactions**: list with filters (filters in Zustand), RHF + Zod + MUI form, optimistic updates.
+8. **Plan and dashboard**: plan editing, copy from previous month, KPIs and realisation bars.
+9. **Daily grid**: categories × days table with totals, cell details.
+10. **Yearly summary**: 12-month table (optionally a chart).
+11. **E2E and quality**: Playwright scenarios, the E2E job in CI, required status checks on `main`, optionally E2E smoke tests against Vercel preview deployments (section 15).
+12. **Monitoring**: CloudWatch RUM (configured from env, enabled in production only), an Error Boundary that reports errors, a custom "transaction_created" event, with no personal data or amounts in events.
 
 **End of the interview preparation stage.** Further steps only on the user's explicit instruction:
 
-12. **(Deferred) Supabase backend**: sub-stages S1–S7 from section 14.6.
+13. **(Deferred) Supabase backend**: sub-stages S1–S7 from section 14.6.
 
 ## 13. Seed data
 
@@ -554,8 +557,43 @@ Set in Vercel Project Settings separately for **Production** and **Preview** (an
 - RUM is initialised only when its variables are present, so previews and local dev send no monitoring data. Add the Vercel production domain to the RUM app monitor's allowed domain.
 - `VITE_APP_VERSION` can be derived in `vite.config.ts` from Vercel's system variable `VERCEL_GIT_COMMIT_SHA`.
 
-### 15.6. E2E against preview deployments (optional, milestone 10)
+### 15.6. E2E against preview deployments (optional, milestone 11)
 
 - A separate workflow triggered by the `deployment_status` event (state `success`) runs a small Playwright smoke suite against the preview URL (`baseURL` taken from the event).
 - If Vercel Deployment Protection is enabled for previews, use the "Protection Bypass for Automation" secret (`VERCEL_AUTOMATION_BYPASS_SECRET` as a GitHub secret, sent as the `x-vercel-protection-bypass` header in Playwright's `extraHTTPHeaders`).
 - The full E2E suite still runs in the main CI workflow against a local build; the preview suite only confirms the deployed build works (routing, assets, env).
+
+## 16. Interview focus: Nx, modular monolith, generators, AI-assisted work
+
+The target role: a high-pressure project where the tech lead needs a solid senior who knows Nx in depth, designs modular monoliths, builds generators and works with AI tools in an agile way. CoinJar is small, so these skills are practised deliberately, not only when a feature needs them.
+
+### 16.1. CoinJar as a modular monolith
+
+- **One deployable, many modules.** `coinjar-web` is the only application; modules are Nx libraries. This is a modular monolith, not micro-frontends: one build, one deployment, one version of every dependency, but module boundaries as strict as between services.
+- **Module = scope, layer = type.** `scope:*` tags are business modules (today `budget`, plus `shared`), `type:*` tags are layers inside a module (section 4). A new business area (e.g. `household`, `settings`) gets its own scope; it talks to other scopes only through their public API.
+- **Public API is a contract.** Only what `index.ts` exports exists for other modules. No deep imports, no re-exporting internals "for convenience". Breaking a public API is a deliberate change.
+- **Rules are enforced by tools, not by review.** `@nx/enforce-module-boundaries` (`depConstraints`, `bannedExternalImports`, `notDependOnLibsWithTags`) fails lint. Reviews discuss design, not import paths.
+- **Architecture decisions are recorded** as ADRs in `docs/adr/NNNN-title.md` (Context, Decision, Alternatives, Consequences). ADR 0001: modular monolith with Nx. Add an ADR for every decision a new team member would ask "why?" about.
+- `pnpm nx graph` is the architecture diagram; keep it readable (no cycles, no "god" libraries).
+
+### 16.2. Generators
+
+- A local Nx plugin `tools/coinjar-plugin` (created with `@nx/plugin`) holds workspace generators:
+  - `library`: wraps `@nx/react:library` / `@nx/js:library` and enforces the directory, name, import path and tags from section 4. Nobody passes tags by hand.
+  - `ui-component`: an atom or molecule in `shared/ui` with the component, a `*.stories.tsx` file (CSF3, autodocs, dark mode variant), a test and the export in `index.ts`.
+  - `feature-view`: a view in a feature library with `messages.ts`, loading/error/empty states and an integration test skeleton.
+- Generators have unit tests (`createTreeWithEmptyWorkspace`, snapshot or assertions on generated files) and `--dry-run` output is reviewed before first use.
+- New libraries and components are created **only** through generators. If a generator does not fit, extend the generator first, then generate. The same applies to AI: Claude runs the generator instead of writing boilerplate by hand.
+- Optional: a sync generator (`nx sync`) that keeps a derived file in sync (e.g. route registry or tags documentation) and a check in CI (`nx sync:check`).
+
+### 16.3. Nx features worth knowing in depth
+
+Project graph and inferred targets (plugins in `nx.json`), task pipeline (`dependsOn`, `targetDefaults`), computation caching (inputs, `namedInputs`, outputs) and remote cache (Nx Cloud), `nx affected` in CI, TS project references and `nx sync`, `nx migrate` for upgrades, module boundaries, generators and executors, `nx release` (for publishable libraries, not used here).
+
+### 16.4. Agile work with AI
+
+- **Context as code.** This file is the single source of truth for AI agents and people. When a rule changes, it changes here first.
+- **Deterministic scaffolding, AI for logic.** Generators produce structure; AI writes and reviews behaviour. Custom Claude Code commands in `.claude/commands/` wrap generators (e.g. `/new-ui-component`), so AI output follows the conventions every time.
+- **Small, verifiable steps.** One milestone, one PR; tests first for bugs; `lint`, `typecheck`, `test`, `build` before a task is done. AI changes get the same review as human changes: no unreviewed merges.
+- **Guardrails, not trust.** Module boundaries, strict TypeScript, ESLint (React Compiler rules), commitlint and CI catch mistakes regardless of who made them.
+- **Know when not to use AI.** Security-sensitive code, secrets and irreversible operations (force pushes, data migrations) are done or confirmed by a human.
