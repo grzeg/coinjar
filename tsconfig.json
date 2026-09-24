@@ -1,0 +1,47 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/coinjar-web-e2e"
+    },
+    {
+      "path": "./apps/coinjar-web"
+    },
+    {
+      "path": "./libs/shared/util"
+    },
+    {
+      "path": "./libs/shared/domain"
+    },
+    {
+      "path": "./libs/shared/ui"
+    },
+    {
+      "path": "./libs/budget/data-access"
+    },
+    {
+      "path": "./libs/budget/state"
+    },
+    {
+      "path": "./libs/budget/feature-dashboard"
+    },
+    {
+      "path": "./libs/budget/feature-transactions"
+    },
+    {
+      "path": "./libs/budget/feature-daily-grid"
+    },
+    {
+      "path": "./libs/budget/feature-plan"
+    },
+    {
+      "path": "./libs/budget/feature-yearly"
+    },
+    {
+      "path": "./libs/budget/feature-categories"
+    }
+  ],
+  "compilerOptions": {}
+}

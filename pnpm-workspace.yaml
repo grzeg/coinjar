@@ -1,0 +1,10 @@
+packages:
+  - 'apps/*'
+  - 'libs/*/*'
+
+# pnpm blocks dependency build scripts by default (supply-chain protection).
+# Only packages listed here may run install scripts.
+allowBuilds:
+  '@swc/core': true
+  esbuild: true
+  nx: true
