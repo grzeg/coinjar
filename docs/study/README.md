@@ -3,12 +3,12 @@
 Notatki teoretyczne, budowane krok po kroku. Każdy rozdział kończy się pytaniami kontrolnymi.
 Praktyka do każdego tematu jest w kodzie CoinJar (odnośniki w rozdziałach).
 
-| #   | Rozdział                                                                                                             | Status    |
-| --- | -------------------------------------------------------------------------------------------------------------------- | --------- |
-| 01  | [Monorepo i modularny monolit: po co to wszystko](01-monorepo-i-modularny-monolit.md)                                | gotowy    |
-| 02  | [Nx od podstaw: graf projektów, zadania, pluginy (porównanie z Turborepo)](02-nx-od-podstaw.md)                      | gotowy    |
-| 03  | [Cache i `affected`: jak Nx przyspiesza CI](03-cache-i-affected.md)                                                  | gotowy    |
-| 04  | [Granice modułów w Nx: tagi, `depConstraints`, publiczne API](04-granice-modulow.md)                                 | gotowy    |
-| 05  | Generatory: `Tree`, szablony, testy, sync generators, migracje                                                       | planowany |
-| 06  | [Praca z AI: Cursor, Copilot, Claude, workflow, MCP, modele i koszty](06-praca-z-ai.md)                              | gotowy    |
-| 07  | [Nx w dużej organizacji: `nx migrate`, CODEOWNERS, zdalny cache, migracja z Turborepo](07-nx-w-duzej-organizacji.md) | gotowy    |
+| #   | Rozdział                                                                                                             | Status |
+| --- | -------------------------------------------------------------------------------------------------------------------- | ------ |
+| 01  | [Monorepo i modularny monolit: po co to wszystko](01-monorepo-i-modularny-monolit.md)                                | gotowy |
+| 02  | [Nx od podstaw: graf projektów, zadania, pluginy (porównanie z Turborepo)](02-nx-od-podstaw.md)                      | gotowy |
+| 03  | [Cache i `affected`: jak Nx przyspiesza CI](03-cache-i-affected.md)                                                  | gotowy |
+| 04  | [Granice modułów w Nx: tagi, `depConstraints`, publiczne API](04-granice-modulow.md)                                 | gotowy |
+| 05  | [Generatory: `Tree`, szablony, testy, sync generators, migracje](05-generatory.md)                                   | gotowy |
+| 06  | [Praca z AI: Cursor, Copilot, Claude, workflow, MCP, modele i koszty](06-praca-z-ai.md)                              | gotowy |
+| 07  | [Nx w dużej organizacji: `nx migrate`, CODEOWNERS, zdalny cache, migracja z Turborepo](07-nx-w-duzej-organizacji.md) | gotowy |
