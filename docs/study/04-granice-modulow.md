@@ -208,3 +208,18 @@ To dobry wzorzec odpowiedzi na rozmowie: „mechanizm bazowy (tagi + `depConstra
 8. Podaj przykład importu, który przejdzie regułę ESLint (dobry scope/kierunek), ale mimo to nie skompiluje się z powodu `exports`.
 9. Jakie trzy elementy z sekcji 16.2 CLAUDE.md są zaplanowane, ale jeszcze nie zaimplementowane w CoinJar?
 10. Dlaczego `scope:shared` może zależeć tylko od `scope:shared`, a nie ma analogicznego wpisu dla `scope:app`? Co to oznacza dla grafu zależności?
+
+---
+
+## Odpowiedzi (skrót)
+
+1. Tag to etykieta bez żadnej mocy sprawczej — czysta dana. Jeśli nie ma reguły `depConstraints` pasującej do jego tagu, projekt może importować cokolwiek bez żadnego ostrzeżenia lintera.
+2. `type:*` (warstwa: `feature → data-access/state/ui → domain → util`) i `scope:*` (moduł biznesowy: `shared`, `budget`, `app`). Import musi przejść obie tabele reguł naraz — to dwie niezależne, sprawdzane osobno osie kontroli.
+3. Łamie dwie reguły: `type:ui → onlyDependOnLibsWithTags: ['type:util']` (a `budget-feature-dashboard` ma `type:feature` — naruszenie warstwy) i `scope:shared → onlyDependOnLibsWithTags: ['scope:shared']` (a ten projekt ma `scope:budget` — naruszenie modułu biznesowego). ESLint zgłasza oba błędy osobno dla jednego importu.
+4. Bo `type:feature` w `onlyDependOnLibsWithTags` nigdy nie zawiera `type:feature` — komentarz w kodzie (`// A feature never imports another feature`) to potwierdza. Wymuszone wprost przez brak tego tagu na liście dozwolonych.
+5. Pilnuje, żeby biblioteka „buildowalna" (z własnym krokiem kompilacji, publikowana niezależnie) nie zależała od niebuildowalnej. W CoinJar wszystkie biblioteki są kompilowane razem z aplikacją (jeden monolit wdrożeniowy), więc to głównie zabezpieczenie na przyszłość, nie realnie wykorzystywany dziś mechanizm.
+6. Lista wzorców ścieżek zwolnionych z reguły. Realny wzorzec: `^.*/eslint(\.base)?\.config\.[cm]?[jt]s$` — dopuszcza, żeby per-projektowe `eslint.config.mjs` importowały bazowy config spoza swoich granic, bo to plik narzędziowy, nie kod aplikacji.
+7. Pole `exports` w `package.json` biblioteki wymienia tylko `.` i `./package.json` jako dostępne ścieżki. Przy `moduleResolution: "nodenext"` TypeScript rozwiązuje moduły tak jak zrobiłby to Node w runtime — ścieżka spoza `exports` jest traktowana jako nieistniejąca, niezależnie od tego, czy plik fizycznie jest na dysku.
+8. Import przez `@coinjar/shared-util` (dobry kierunek, przejdzie `enforce-module-boundaries`), ale odwołujący się do funkcji niewyeksportowanej z `libs/shared/util/src/index.ts` — nie skompiluje się, bo TypeScript w ogóle nie widzi niczego poza tym, co jest w `exports`.
+9. `bannedExternalImports`, generator `library` pilnujący tagów automatycznie, ADR 0001 w `docs/adr/`.
+10. Bo `scope:app` (czyli `coinjar-web`) jest zawsze liściem grafu — jest jednostką wdrożenia, nikt jej nie importuje jako biblioteki. Brak wpisu oznacza: nic nie ma prawa zależeć od `scope:app`, co odzwierciedla, że aplikacja składa moduły, a nie odwrotnie.

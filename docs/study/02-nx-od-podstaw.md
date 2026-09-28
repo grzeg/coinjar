@@ -284,3 +284,18 @@ Bardziej zaawansowane executory (np. `@nx/eslint:lint`) potrafią dodatkowo np. 
 8. Wymień trzy rzeczy, które Nx ma wbudowane, a Turborepo wymaga dorobić samodzielnie.
 9. Czy migracja z Turborepo na Nx wymaga zmiany package managera albo `pnpm-workspace.yaml`? Uzasadnij.
 10. Jednym zdaniem: czym różni się filozofia Nx od filozofii Turborepo?
+
+---
+
+## Odpowiedzi (skrót)
+
+1. Turborepo liczy graf tylko z `package.json` (`dependencies`). Nx dokłada analizę importów w kodzie — mapuje `import ... from '@coinjar/x'` na projekt, który to eksportuje — więc graf Nx jest zawsze zgodny z rzeczywistym kodem, nie tylko z manifestami.
+2. Target = zadanie uruchamialne na projekcie (`build`, `test`, `lint`). W `shared-util` nic nie jest zdefiniowane ręcznie — `typecheck` bierze się z `@nx/js/typescript` (czyta `tsconfig.json`), `test` z `@nx/vitest` (czyta `vitest.config.ts`), `lint` z `@nx/eslint/plugin` (czyta `eslint.config.mjs`).
+3. `project.json` = ręczna, jawna definicja (widać wszystko w jednym pliku, ale trzeba to utrzymywać). Wywnioskowany = zero duplikacji (target bierze się z configu narzędzia, który i tak istnieje), kosztem tego, że lista targetów nie jest w jednym miejscu — trzeba sięgnąć po `nx show project <nazwa>`.
+4. Mówi: zanim uruchomisz `test` na projekcie, uruchom najpierw `build` na wszystkich jego zależnościach (`^` = zależności). To dokładnie ten sam mechanizm i składnia co `dependsOn` w `turbo.json`.
+5. `namedInputs` to nazwane zestawy globów wielokrotnego użytku w `inputs` targetów. `default` = wszystkie pliki projektu, `production` = `default` minus testy/configi testowe/lintera. Oszczędność: zmiana testu w `shared-util` nie unieważnia cache `build`/`typecheck` w `feature-dashboard`, bo ten używa `^production` (a nie `^default`) jako wejścia zależności.
+6. `@nx/vite/plugin` → `build`/`serve`/`preview` z `vite.config.ts`; `@nx/vitest` → `test`/`test-ci` z `vitest.config.ts`; `@nx/eslint/plugin` → `lint` z `eslint.config.mjs` (plus `@nx/js/typescript` → `typecheck`, `@nx/playwright/plugin` → `e2e`).
+7. To najprostszy executor Nx — po prostu odpala shellową komendę (np. `vitest`) w katalogu projektu. Różnica względem wpisania komendy w `package.json` scripts: ta sama komenda jest teraz opakowana tak, żeby task-runner Nx wiedział o niej wszystko — cache, `dependsOn`, równoległość.
+8. Tagi + `@nx/enforce-module-boundaries` (granice modułów wymuszone lintem), generatory (`nx g`, `Tree` API), `nx migrate` (automatyczne codemody przy aktualizacji wersji).
+9. Nie — `pnpm-workspace.yaml` (albo odpowiednik npm/yarn) to warstwa niezmieniana przez żadne z narzędzi. Nx i Turborepo to dwie różne nakładki orkiestracji zadań na ten sam, niezmieniony sposób trzymania paczek w repo.
+10. Turborepo to task runner z cache nałożony na istniejący workspace; Nx to model całego repo (graf, tagi, granice, generatory), w którym task runner z cache jest tylko jednym z elementów.

@@ -168,3 +168,18 @@ To dobry, konkretny przykład na rozmowę: **znam różnicę między „podłąc
 8. Jaki jest realny stan integracji z Nx Cloud w CoinJar i czego brakuje, żeby CI korzystało ze zdalnego cache?
 9. Podaj dwie pułapki, które sprawiają, że cache zwróci nieaktualny/błędny wynik.
 10. Czym `nx run-many --all` różni się od `nx affected` w kontekście cache — który mechanizm z którego korzysta?
+
+---
+
+## Odpowiedzi (skrót)
+
+1. `affected` odpowiada „co trzeba sprawdzić", cache odpowiada „co z tego było już policzone". Przykład bez cache: pierwsze uruchomienie na świeżym runnerze CI — `affected` i tak ograniczy zakres, ale nic nie trafi w cache. Przykład bez `affected`: `nx run-many --all` bez żadnej zmiany w repo — nic nie jest affected, ale cache i tak odda gotowe wyniki dla wszystkiego.
+2. `git diff NX_BASE...NX_HEAD --name-only` → lista zmienionych plików → mapowanie pliku na projekt (po ścieżce) → rozszerzenie o wszystkich, którzy (bezpośrednio lub pośrednio) importują zmieniony projekt, przez graf zależności.
+3. Ustawia `NX_BASE`/`NX_HEAD`, znajdując ostatni **udany** przebieg CI na `main` przez GitHub Actions API. Porównanie z najnowszym `main` byłoby błędne, bo najnowszy commit na `main` mógł jeszcze nie przejść CI — dostalibyśmy affected względem niesprawdzonego stanu.
+4. Pliki wejściowe (`namedInputs`), outputy zależności, komenda + jej opcje, zewnętrzne zależności, zadeklarowane zmienne środowiskowe. Przykład: podbicie wersji Vitest powinno unieważnić cache `test`, bo inny runner może dać inny wynik mimo niezmienionego kodu testu — stąd `externalDependencies:["vitest"]` w inputach.
+5. Przy cache hit Nx odtwarza tylko zadeklarowane `outputs` — plik zapisany poza nimi **nie zostanie odtworzony**, więc kolejne kroki, które go oczekują, zobaczą stan sprzed uruchomienia (albo brak pliku).
+6. `.nx/cache` (potwierdzone w `.gitignore`) — cache **wyników zadań**. `.nx/workspace-data` to cache **grafu projektów** (żeby nie analizować importów całego repo od zera przy każdym poleceniu) — różne dane, różny cel.
+7. Lokalny pomaga jednej maszynie między uruchomieniami. Nie pomaga między maszynami — każdy runner CI to świeża maszyna, więc bez zdalnego cache CI zawsze liczy wszystko od zera (poza tym, co już ograniczył `affected`).
+8. `nxCloudId` jest ustawiony (workspace podłączony do Nx Cloud), ale `ci.yml` nie ma `NX_CLOUD_ACCESS_TOKEN` — CI korzysta tylko z lokalnego cache w obrębie jednego joba, nie ze zdalnego między przebiegami. Brakuje dodania tokenu jako sekretu i użycia go w workflow.
+9. Niedeklarowane wejście (target czyta coś spoza `inputs` → cache może zwrócić nieaktualny wynik) i efekt uboczny poza `outputs` (zapisany plik nie zostanie odtworzony przy cache hit).
+10. `nx run-many --all` uruchamia targety na **wszystkich** projektach, ale nadal korzysta z cache (pominie te, które się nie zmieniły). `nx affected` dodatkowo **ogranicza zbiór projektów** przez graf — oba mechanizmy są niezależne i można je łączyć albo używać osobno.
