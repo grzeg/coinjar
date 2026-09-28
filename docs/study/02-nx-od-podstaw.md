@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-- Nx i Turborepo rozwiązują ten sam problem (cache + `affected` w monorepo), ale **Nx dodatkowo zna strukturę Twojego kodu**: graf projektów, zależności, tagi, granice modułów, generatory. Turborepo zna tylko graf **zadań** zdefiniowany ręcznie w `turbo.json`.
+- Nx i Turborepo rozwiązują ten sam problem (cache + `affected` w monorepo) i **oba automatycznie liczą graf zależności** z `package.json` — to nie jest coś, co trzeba ręcznie rysować w żadnym z nich. Ręczny w Turborepo jest tylko `turbo.json`: definicje **zadań** (`tasks`/`pipeline`), nie sam graf. Różnica jest głębiej: **Nx wzbogaca ten graf o analizę importów w kodzie i pokazuje go jawnie** (`nx graph`), a do tego dokłada tagi, granice modułów i generatory — Turborepo zatrzymuje się na surowym grafie z manifestów.
 - **Graf projektów** to model repo: węzły to projekty (`apps/*`, `libs/*`), krawędzie to zależności (kto kogo importuje). Nx buduje go automatycznie, analizując kod i `package.json`.
 - **Target** (zadanie) to coś, co można uruchomić na projekcie: `build`, `test`, `lint`. W CoinJar targety są w większości **wywnioskowane** przez pluginy (`@nx/vite/plugin`, `@nx/vitest`, `@nx/eslint/plugin`) z plików konfiguracyjnych, które i tak już masz (`vite.config.ts`, `eslint.config.mjs`) — nie trzeba ich ręcznie definiować.
 - **Task pipeline** (`dependsOn`, `targetDefaults`) mówi, w jakiej kolejności i z jakimi zależnościami uruchamiać targety, np. „test” najpierw zbuduj wszystkie zależności (`^build`).
