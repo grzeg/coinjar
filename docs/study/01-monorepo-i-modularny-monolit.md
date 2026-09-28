@@ -430,3 +430,21 @@ Moja interpretacja, bo nie znamy ich projektu:
 11. Czym różni się granica „z konwencji” od granicy „wymuszonej lintem”? Pokaż na przykładzie importu.
 12. Czym różni się monorepo z monolitem od monorepo z mikroserwisami? Co zostaje trudne w mikroserwisach mimo monorepo?
 13. Dlaczego wdrożenia mikroserwisów nie są atomowe i jak z tym żyć?
+
+---
+
+## Odpowiedzi (skrót)
+
+1. Zmiana przekrojowa jednym PR-em zamiast kilku; brak rozjazdu wersji między aplikacjami; jedna konfiguracja narzędzi (ESLint/TS/CI) zamiast duplikatów w każdym repo.
+2. Monorepo = gdzie leży kod (jedno repo, wiele projektów). Monolit = jak jest wdrażany (jedna całość). Przykład monorepo-nie-monolitu: Google — jedno repo, tysiące niezależnie wdrażanych usług.
+3. Kod bez struktury, gdzie wszystko zależy od wszystkiego. Mikroserwisy tego nie leczą, bo tylko rozbijają wdrożenie — jeśli kod w środku był splątany, staje się „rozproszonym monolitem": to samo splątanie, plus sieć, wersjonowanie kontraktów i monitoring rozproszony.
+4. Wysoka spójność (jeden obszar biznesowy), luźne powiązania (zależność tylko przez kontrakt), publiczne API (reszta prywatna), granice wymuszane narzędziem (lint/build), nie dobrą wolą.
+5. Jedna aplikacja, mały zespół, krótki horyzont życia, brak kodu współdzielonego z innymi projektami — architektura utrzyma się konwencją.
+6. Koszty: CI musi budować/testować wszystko przy każdej zmianie (bez cache); bez granic robi się „big ball of mud" na większą skalę; trudniejsza kontrola dostępu; rozmiar repo; single version policy boli przy aktualizacjach. Nx ogranicza to przez `affected` + cache (koszt 1) i tagi/`enforce-module-boundaries` (koszt 2).
+7. Jednostka wdrożenia: `apps/coinjar-web` (jedyny build/deploy). Moduł: biblioteka `libs/*` ze swoim `scope:*` (np. `budget`, `shared`). Warstwa: `type:*` wewnątrz modułu (`feature → data-access/state/ui → domain → util`).
+8. Polyrepo: zmiana w `design-system`, podbicie wersji (major, bo breaking), publikacja do rejestru npm, potem osobny PR w KAŻDEJ aplikacji-konsumencie (ręcznie albo bot Renovate/Dependabot podbija numer, ale człowiek i tak poprawia kod po breaking change). Monorepo: jeden branch, jeden PR zmienia bibliotekę i wszystkich konsumentów naraz, CI testuje całość na tym samym commicie, nikt nie podbija wersji (biblioteka nie ma wersji, zależność przez `workspace:*`).
+9. `workspace:*` = zależność zawsze wskazuje na aktualny kod z tego samego repo/commita (pnpm robi symlink), zamiast na opublikowaną wersję z rejestru. „Wersją" aplikacji webowej jest commit SHA, z którego zbudowano (np. `VITE_APP_VERSION` z `VERCEL_GIT_COMMIT_SHA`), nie numer semver.
+10. Expand and contract: najpierw dodajesz nowe API obok starego (stare oznaczone `@deprecated`) i mergujesz bez łamania nikogo. Potem migrujesz konsumentów w mniejszych, osobnych PR-ach (każdy zespół we własnym tempie). Na końcu usuwasz stare API osobnym PR-em, gdy już nikt go nie używa.
+11. Konwencja: podział na foldery (`shared/`, `features/`) istnieje tylko w dokumentacji/głowie autora — nic nie blokuje importu `shared/ui` → `features/plan`, kompiluje się i przechodzi testy. Wymuszona lintem: `@nx/enforce-module-boundaries` z tagami sprawdza każdy import — ten sam import zwraca błąd ESLint, blokuje pre-commit hook i CI, więc nie da się zmergować.
+12. Monolit: biblioteki wkompilowane w jedną aplikację, moduły rozmawiają przez wywołanie funkcji w procesie. Mikroserwisy (w tym samym repo): wiele aplikacji budowanych/wdrażanych osobno, rozmawiają przez sieć. W mikroserwisach mimo monorepo trudne zostaje: wdrożenia nie są atomowe (serwisy wdrażają się w różnym czasie), więc kontrakty między nimi muszą być wstecznie kompatybilne (expand and contract), mimo że kod zmienił się w jednym PR.
+13. Bo każdy serwis ma własny proces wdrożenia i własny harmonogram (deploy trwa, instancje aktualizują się stopniowo) — nie ma jednej „chwili", w której wszystko przełącza się razem, jak przy jednym buildzie monolitu. Żyje się z tym przez wsteczną kompatybilność kontraktów (expand and contract): najpierw wysyłasz stare i nowe pole naraz, potem migrujesz konsumentów, na końcu usuwasz stare.
