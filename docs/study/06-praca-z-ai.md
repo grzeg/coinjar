@@ -274,3 +274,19 @@ Ceny się zmieniają, więc przed rozmową sprawdź aktualny cennik. Inni dostaw
 9. Co daje prompt caching i Batch API?
 10. Który model wybierzesz do: projektu granic modułów, implementacji testów, zmiany nazw w 200 plikach? Uzasadnij.
 11. Czemu koszt „za zadanie” jest lepszą miarą niż koszt „za zapytanie”?
+
+---
+
+## Odpowiedzi (skrót)
+
+1. Instrukcje projektu, czat, agent, tryb planowania, agent w chmurze, własne komendy, MCP, wybór modelu. Odpowiedniki pliku instrukcji: `.cursor/rules/*.mdc`/`AGENTS.md` (Cursor), `.github/copilot-instructions.md`/`AGENTS.md` (Copilot), `CLAUDE.md` (Claude Code).
+2. Trzymać konfigurację AI niezależną od narzędzia i wersjonowaną w repo: wspólny `AGENTS.md` (czytany przez Cursora i Copilota), wspólne serwery MCP (`.mcp.json`/`.cursor/mcp.json`/`.vscode/mcp.json` — ta sama definicja), generatory Nx (deterministyczny szkielet niezależny od tego, które narzędzie AI go uruchamia).
+3. Zbadaj (agent czyta i opisuje, bez pisania kodu) → zaplanuj (agent proponuje plan, ja go poprawiam) → mały krok implementacji → automatyczna weryfikacja (lint/typecheck/test/build) → review diffu → commit/PR. Zatrzymuję agenta po etapie planu — to najtańszy moment na korektę kierunku, zanim powstanie linijka kodu.
+4. Ilość tekstu, który model „widzi” naraz w danej sesji — duża, ale nie nieskończona, jakość spada gdy zapchana. Zarządzanie: jedno zadanie na sesję, podawanie konkretnych plików zamiast całego repo, delegowanie szukania subagentom, zapisywanie ważnych ustaleń w plikach (nie tylko w rozmowie), bo długie sesje są kompaktowane (streszczane).
+5. Otwarty protokół (JSON-RPC 2.0) łączący modele z narzędziami/danymi. Host (np. Claude Code) zarządza klientami i pyta o zgodę; klient to połączenie z jednym serwerem; serwer (lokalny przez stdio albo zdalny przez HTTP) udostępnia możliwości. Przebieg: host łączy się z serwerem (`initialize`), klient pobiera listę narzędzi (`tools/list`), model decyduje że potrzebuje narzędzia i generuje wywołanie, host wysyła `tools/call`, wynik wraca do kontekstu modelu.
+6. Tools (narzędzia/akcje) — o ich użyciu decyduje model. Resources (dane do odczytu) — decyduje aplikacja lub użytkownik. Prompts (szablony poleceń) — decyduje użytkownik.
+7. Kontekst (opis każdego narzędzia zajmuje tokeny, więcej serwerów = wyższy koszt i gorszy wybór narzędzia), prompt injection (wynik narzędzia może zawierać tekst udający polecenie — model musi traktować wyniki jako dane, nie polecenia), nadmiarowe uprawnienia (token powinien mieć minimalny zakres), zaufanie do serwera (to kod uruchamiany lokalnie — instalować tylko ze sprawdzonych źródeł, przypinać wersje).
+8. Z tokenów wejściowych (tańsze) i wyjściowych (ok. 5× droższe). Agent to pętla — jedno zadanie to dziesiątki wywołań modelu, a przy każdym model czyta całą dotychczasową rozmowę, więc koszt rośnie szybciej niż długość rozmowy; długie sesje = więcej powtórnie czytanego kontekstu.
+9. Prompt caching: powtarzany początek zapytania (instrukcje, pliki, historia) kosztuje przy odczycie ok. 10% normalnej ceny wejścia. Batch API: zadania niepilne (nocna analiza) kosztują ok. 50% mniej.
+10. Projekt granic modułów: największy model (Opus/Fable) — błędna decyzja architektoniczna kosztuje godziny, tokeny są tanie w porównaniu. Implementacja testów: średni (Sonnet) — wystarczająca jakość, dużo taniej. Zmiana nazw w 200 plikach: mały (Haiku) albo najlepiej generator/codemod zamiast AI w ogóle — to mechaniczna, dobrze zdefiniowana operacja.
+11. Bo tani model, który potrzebuje pięciu poprawek, jest droższy (w tokenach i w czasie programisty) od drogiego, który zrobi to za pierwszym razem. Koszt pojedynczego zapytania nie uwzględnia liczby iteracji potrzebnych do poprawnego wyniku.

@@ -302,3 +302,18 @@ Z CLAUDE.md, milestone 3 (jeszcze nie zrealizowany):
 8. Czym różni się migracja od generatora pod względem tego, kto ją pisze i kto ją uruchamia?
 9. Jak `nx migrate` łagodzi koszt „single version policy" opisany w rozdziale 01?
 10. Wymień trzy konkretne elementy z planu milestone'u 3 CoinJar, które jeszcze nie istnieją w repo.
+
+---
+
+## Odpowiedzi (skrót)
+
+1. `Tree` to wirtualny system plików w pamięci — operacje (`write`, `delete`, `rename`) nie dotykają dysku, dopóki CLI nie „spłucze" zmian na koniec. Dzięki temu generator jest czystą funkcją (stan repo + opcje → nowy stan repo), więc da się go uruchomić w testach bez żadnych efektów ubocznych na prawdziwym systemie plików.
+2. Cały generator wykonuje się normalnie (logika, `generateFiles`, edycje `Tree`), tylko pomijany jest ostatni krok — flush na dysk. CLI pokazuje diff tego, co by powstało, bez zapisu — stąd `--dry-run` jest praktycznie darmowy.
+3. Kopiuje katalog szablonów, podstawiając zmienne w nazwach plików i treści (składnia EJS). `__name__` w nazwie pliku jest podmieniane na wartość `options.name`, np. `__name__.tsx.template` → `MoneyText.tsx`.
+4. Wywołujesz generator na `Tree` z `createTreeWithEmptyWorkspace()`, potem `tree.read('libs/shared/ui/src/index.ts', 'utf-8')` i sprawdzasz, czy zawiera nowy `export * from '...'` — bez tworzenia żadnego pliku na dysku.
+5. Bo `@nx/react:library` już robi ciężką robotę (struktura, `package.json`, `tsconfig`, konfiguracja Vitest) — pisanie tego od zera duplikowałoby dobrze przetestowany kod. Generator owijający dokłada tylko to, co specyficzne dla CoinJar: wymuszoną ścieżkę, nazwę i tagi.
+6. Sync generator uruchamia się automatycznie przed innym targetem, żeby pilnować spójności pliku pochodnego — nie jest wywoływany ręcznie przez człowieka na żądanie. Realny przykład z rozdziału 02: `@nx/js:typescript-sync` na targecie `typecheck`, synchronizujący referencje projektów w `tsconfig.json` z grafem zależności Nx.
+7. Sprawdza, czy plik wygenerowany przez sync generator byłby inny niż to, co jest w repo — failuje, jeśli tak. Zwykłe `nx build` by tego nie złapało, bo nie uruchamia sync generatorów w trybie sprawdzającym, tylko liczyłoby na to, że plik już jest aktualny.
+8. Migrację pisze autor pluginu/frameworka (Nx, `@nx/react` itd.), a uruchamia ją `nx migrate` automatycznie, raz, przy podbijaniu wersji. Generator piszesz Ty (albo autor Twojego lokalnego pluginu), a uruchamiasz go ręcznie, kiedy chcesz stworzyć coś nowego.
+9. Bo automatyzuje mechaniczną część aktualizacji (codemod przepisujący kod pod nowe API), zamiast zostawiać to każdemu zespołowi/projektowi z osobna — podbicie wspólnej zależności nadal dotyczy wszystkich naraz, ale znaczną część roboty robi za Ciebie.
+10. `tools/coinjar-plugin` (nie istnieje), `docs/adr/` (nie istnieje), pakiet `@nx/plugin` (niezainstalowany) — a wraz z nimi generatory `library`/`ui-component`/`feature-view`.

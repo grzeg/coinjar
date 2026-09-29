@@ -157,3 +157,18 @@ Gdy wszystkie zespoły i cały CI korzystają z Nx, `turbo.json` i zależność 
 8. Jak sprawdzić w trakcie migracji, że Nx daje ten sam wynik `affected` co dotychczasowy `turbo --filter`?
 9. Dlaczego w CoinJar (skala: kilkanaście projektów, jeden autor) CODEOWNERS i dystrybucja zadań nie są dziś potrzebne?
 10. Co się dzieje z `turbo.json` na końcu migracji i dlaczego to jest „contract", a nie „expand"?
+
+---
+
+## Odpowiedzi (skrót)
+
+1. Renovate/Dependabot podbija tylko numer wersji w `package.json` — jeśli jest breaking change, CI dostaje czerwone i człowiek musi ręcznie poprawić kod. `nx migrate --run-migrations` dostarcza gotowy codemod, ale tylko dla paczek, które same publikują migracje w swoim `migrations.json` (ekosystem `@nx/*` i część innych narzędzi) — zwykłej zależności npm bez migracji to nie naprawi.
+2. `nx migrate latest` podbija wersje `@nx/*`/`nx` w `package.json` i generuje `migrations.json` z listą migracji do wykonania — **nic jeszcze nie zmienia w kodzie**. Dopiero `pnpm install` + `nx migrate --run-migrations` faktycznie uruchamia zebrane migracje (generatory) na Twoim kodzie.
+3. Plik `.github/CODEOWNERS` (mechanizm GitHuba) mapuje ścieżki na zespoły wymagane do zatwierdzenia PR-a. Mapuje się naturalnie na `scope:*`, bo struktura katalogów (`libs/budget/`, `libs/shared/`) już odzwierciedla podział na moduły biznesowe z rozdziału 04.
+4. Rozwiązuje problem z rozdziału 01: autor zmiany łamiącej poprawia wszystkich konsumentów w jednym PR-cie, a CODEOWNERS wymusza, że każdy dotknięty zespół musi to zatwierdzić. Kompromis: PR dotykający 6 bibliotek potrzebuje 6 zatwierdzeń, co może blokować pracę — łagodzi to expand-and-contract i migracje automatyczne przez generator.
+5. Cache odpowiada „czy to już liczono" (oszczędza powtórne liczenie tego samego). Dystrybucja dzieli affected zadania między wiele maszyn w jednym przebiegu CI. Sytuacja, gdzie tylko dystrybucja pomoże: duży refaktor, po którym prawie wszystko jest affected i nic nie trafia w cache (bo to nowy wynik) — trzeba po prostu szybciej policzyć dużo nowej pracy równolegle.
+6. Bo `pnpm-workspace.yaml` to warstwa trzymania paczek w repo, której żadne z narzędzi (Turborepo, Nx) nie modyfikuje — obie to tylko różne nakładki orkiestracji zadań na ten sam, niezmieniony workspace.
+7. Oba narzędzia (Turborepo i Nx) działają obok siebie przez pewien czas na tym samym kodzie — `nx init` dodaje `nx.json` bez usuwania `turbo.json`. To ten sam wzorzec „expand" z expand-and-contract z rozdziału 01: najpierw dodajesz nowe obok starego, dopiero potem migrujesz.
+8. Porównując na tym samym commicie zestaw projektów zwrócony przez `turbo run ... --filter=...[ref]` z zestawem z `nx show projects --affected` — rozjazd oznacza, że graf albo `inputs`/`outputs` nie są jeszcze poprawnie odwzorowane w Nx.
+9. Bo skala nie generuje problemu, który te mechanizmy rozwiązują: jeden autor nie potrzebuje wymuszonego review od innych zespołów (CODEOWNERS), a kilkanaście affected zadań mieści się bez problemu na jednym runnerze CI bez dzielenia pracy na agentów.
+10. `turbo.json` i zależność `turbo` usuwa się w jednym, małym PR-cie, gdy wszystkie zespoły i cały CI korzystają już z Nx. To „contract", bo usuwa się starą warstwę po tym, jak nowa już w pełni ją zastąpiła — odwrotność „expand", gdzie dodawano nowe obok starego.
