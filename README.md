@@ -2,9 +2,15 @@
 
 [![CI](https://github.com/grzeg/coinjar/actions/workflows/ci.yml/badge.svg)](https://github.com/grzeg/coinjar/actions/workflows/ci.yml)
 
-**EN** A household budget app that replaces a budget spreadsheet: income and expenses by category, a monthly plan compared with actuals, and monthly and yearly summaries. It is a **practice project in progress**: the foundations (Nx workspace with enforced module boundaries, domain model, money and date utilities, monthly summary logic, CI) are in place, and the feature views are still placeholders. The UI is in Polish.
+**EN** A personal home-finance toolbox, built as an Nx monorepo where each business area is a separate module. The first module is a **household budget** that replaces a budget spreadsheet: income and expenses by category, a monthly plan compared with actuals, and monthly and yearly summaries. It is a **personal project in progress**: the foundations (Nx workspace with enforced module boundaries, domain model, money and date utilities, monthly summary logic, CI) are in place, and the feature views are still placeholders. The UI is in Polish. The app is meant to run locally, with data stored on the user's own machine.
 
-**PL** Aplikacja do domowego budżetu, która zastępuje arkusz kalkulacyjny: przychody i wydatki w kategoriach, miesięczny plan porównywany z wykonaniem oraz podsumowania miesięczne i roczne. To **projekt ćwiczebny w trakcie budowy**: fundamenty (workspace Nx z wymuszonymi granicami modułów, model domeny, narzędzia do pieniędzy i dat, logika podsumowania miesiąca, CI) są gotowe, a widoki funkcjonalne to na razie szkielety. Interfejs jest po polsku.
+**PL** Osobisty zestaw narzędzi do domowych finansów, zbudowany jako monorepo Nx, w którym każdy obszar biznesowy to osobny moduł. Pierwszy moduł to **budżet domowy**, który zastępuje arkusz kalkulacyjny: przychody i wydatki w kategoriach, miesięczny plan porównywany z wykonaniem oraz podsumowania miesięczne i roczne. To **projekt osobisty w trakcie budowy**: fundamenty (workspace Nx z wymuszonymi granicami modułów, model domeny, narzędzia do pieniędzy i dat, logika podsumowania miesiąca, CI) są gotowe, a widoki funkcjonalne to na razie szkielety. Interfejs jest po polsku. Aplikacja ma działać lokalnie, a dane zostają na komputerze użytkownika.
+
+## Modules / Moduły
+
+**EN** Work goes one module at a time. **Module 1, household budget (`scope:budget`):** in progress, see Status below. **Next modules:** not started and not yet specified. Each one will get its own `scope:*` tag and talk to the others only through public APIs. Ideas under consideration, with no commitment: a helper for preparing a monthly VAT declaration (JPK). Nothing beyond the budget is implemented today.
+
+**PL** Prace idą po jednym module. **Moduł 1, budżet domowy (`scope:budget`):** w toku, patrz Status poniżej. **Kolejne moduły:** jeszcze nierozpoczęte i niedoprecyzowane. Każdy dostanie własny tag `scope:*` i będzie komunikował się z pozostałymi tylko przez publiczne API. Rozważany pomysł, bez zobowiązań: pomocnik do przygotowania miesięcznej deklaracji VAT (JPK). Poza budżetem nic nie jest dziś zaimplementowane.
 
 ## Status
 
